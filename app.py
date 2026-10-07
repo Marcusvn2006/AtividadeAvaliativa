@@ -27,6 +27,10 @@ servicos = [
 
 # LOGIN E PAINEL
 
+# Credenciais fixas, só para a atividade
+LOGIN_EMAIL = 'admin@petfeliz.com'
+LOGIN_SENHA = '123456'
+
 @app.route('/', methods=['GET', 'POST'])
 def login():
     erros = []
@@ -41,9 +45,11 @@ def login():
         if not senha:
             erros.append('A senha é obrigatória.')
 
-        # Sem erros: segue para o painel (a autenticação de verdade fica para as próximas aulas)
+        # Campos preenchidos: confere e-mail e senha
         if not erros:
-            return redirect(url_for('dashboard'))
+            if email == LOGIN_EMAIL and senha == LOGIN_SENHA:
+                return redirect(url_for('dashboard'))
+            erros.append('E-mail ou senha incorretos.')
 
     return render_template('login.html', email=email, erros=erros)
 
