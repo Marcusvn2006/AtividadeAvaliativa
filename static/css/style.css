@@ -1,0 +1,27 @@
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.navbar {
+    background-color: #0f766e !important;
+}
+
+footer {
+    background-color: #0f766e;
+    color: #ffff;
+}
+
+.boas-vindas {
+    background-color: #0f766e;
+    color: #ffff;
+    border-radius: 12px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+}
+
+/* Fundo cinza da tela de login */
+.fundo-cinza {
+    background-color: #e9e7e5;
+}

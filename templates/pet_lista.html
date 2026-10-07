@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Listagem de Pets — Pet Feliz{% endblock %}
+
+{% block conteudo %}
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Listagem de Pets</h2>
+    <a href="{{ url_for('cadastro_pet') }}" class="btn btn-success">ADICIONAR</a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>NOME</th>
+          <th>ESPÉCIE</th>
+          <th>RAÇA</th>
+          <th>PORTE</th>
+          <th>TUTOR</th>
+          <th>AÇÕES</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pet in pets %}
+        <tr>
+          <td>{{ pet.id }}</td>
+          <td>{{ pet.nome }}</td>
+          <td>{{ pet.especie }}</td>
+          <td>{{ pet.raca }}</td>
+          <td>{{ pet.porte }}</td>
+          <td>{{ pet.tutor }}</td>
+          <td>
+            <a href="#" class="btn btn-warning btn-sm">Editar</a>
+            <a href="#" class="btn btn-danger btn-sm">Excluir</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" class="text-center text-muted py-4">Nenhum pet cadastrado.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+{% endblock %}

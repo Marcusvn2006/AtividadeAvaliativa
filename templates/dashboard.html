@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Painel — Pet Feliz{% endblock %}
+
+{% block conteudo %}
+
+  <div class="boas-vindas">
+    <h1>Pet Feliz</h1>
+    <p class="mb-0 opacity-75">Sistema de gestão do pet shop</p>
+  </div>
+
+  <div class="row">
+
+    <div class="col-md-4 mb-3">
+      <div class="card h-100">
+        <div class="card-body text-center">
+          <h5 class="card-title">Usuários</h5>
+          <p class="card-text text-muted">{{ total_usuarios }} cadastrado(s)</p>
+          <a href="{{ url_for('lista_usuarios') }}" class="btn btn-primary">Acessar</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <div class="card h-100">
+        <div class="card-body text-center">
+          <h5 class="card-title">Pets</h5>
+          <p class="card-text text-muted">{{ total_pets }} cadastrado(s)</p>
+          <a href="{{ url_for('lista_pets') }}" class="btn btn-primary">Acessar</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <div class="card h-100">
+        <div class="card-body text-center">
+          <h5 class="card-title">Serviços</h5>
+          <p class="card-text text-muted">{{ total_servicos }} cadastrado(s)</p>
+          <a href="{{ url_for('lista_servicos') }}" class="btn btn-primary">Acessar</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+{% endblock %}

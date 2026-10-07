@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Busca — Pet Feliz{% endblock %}
+
+{% block conteudo %}
+
+  <h2 class="mb-4">Resultado da busca: "{{ termo }}"</h2>
+
+  <h4>Usuários <span class="badge bg-secondary">{{ usuarios | length }}</span></h4>
+  <ul>
+    {% for usuario in usuarios %}
+      <li>{{ usuario.nome }} — {{ usuario.email }}</li>
+    {% else %}
+      <li class="text-muted">Nenhum usuário encontrado.</li>
+    {% endfor %}
+  </ul>
+
+  <h4 class="mt-4">Pets <span class="badge bg-secondary">{{ pets | length }}</span></h4>
+  <ul>
+    {% for pet in pets %}
+      <li>{{ pet.nome }} ({{ pet.especie }}) — tutor: {{ pet.tutor }}</li>
+    {% else %}
+      <li class="text-muted">Nenhum pet encontrado.</li>
+    {% endfor %}
+  </ul>
+
+  <h4 class="mt-4">Serviços <span class="badge bg-secondary">{{ servicos | length }}</span></h4>
+  <ul>
+    {% for servico in servicos %}
+      <li>{{ servico.nome }} — R$ {{ servico.preco }}</li>
+    {% else %}
+      <li class="text-muted">Nenhum serviço encontrado.</li>
+    {% endfor %}
+  </ul>
+
+{% endblock %}
