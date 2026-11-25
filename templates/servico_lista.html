@@ -24,20 +24,24 @@
       <tbody>
         {% for servico in servicos %}
         <tr>
-          <td>{{ servico.id }}</td>
+          <td>{{ servico.id_servico }}</td>
           <td>{{ servico.nome }}</td>
-          <td>R$ {{ servico.preco }}</td>
+          <td>R$ {{ '%.2f' | format(servico.preco) | replace('.', ',') }}</td>
           <td>{{ servico.duracao_minutos }} min</td>
           <td>
-            {% if servico.ativo == 'sim' %}
+            {% if servico.ativo %}
               <span class="badge bg-success">Ativo</span>
             {% else %}
               <span class="badge bg-secondary">Inativo</span>
             {% endif %}
           </td>
           <td>
-            <a href="#" class="btn btn-warning btn-sm">Editar</a>
-            <a href="#" class="btn btn-danger btn-sm">Excluir</a>
+            <a href="{{ url_for('cadastro_servico', id_servico=servico.id_servico) }}" class="btn btn-warning btn-sm">Editar</a>
+            <form action="{{ url_for('excluir_servico', id_servico=servico.id_servico) }}" method="post" class="d-inline"
+                  onsubmit="return confirm('Excluir o serviço {{ servico.nome }}?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
+            </form>
           </td>
         </tr>
         {% else %}

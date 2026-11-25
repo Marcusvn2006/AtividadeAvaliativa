@@ -25,15 +25,19 @@
       <tbody>
         {% for pet in pets %}
         <tr>
-          <td>{{ pet.id }}</td>
+          <td>{{ pet.id_pet }}</td>
           <td>{{ pet.nome }}</td>
           <td>{{ pet.especie }}</td>
-          <td>{{ pet.raca }}</td>
-          <td>{{ pet.porte }}</td>
+          <td>{{ pet.raca or '' }}</td>
+          <td>{{ pet.porte or '' }}</td>
           <td>{{ pet.tutor }}</td>
           <td>
-            <a href="#" class="btn btn-warning btn-sm">Editar</a>
-            <a href="#" class="btn btn-danger btn-sm">Excluir</a>
+            <a href="{{ url_for('cadastro_pet', id_pet=pet.id_pet) }}" class="btn btn-warning btn-sm">Editar</a>
+            <form action="{{ url_for('excluir_pet', id_pet=pet.id_pet) }}" method="post" class="d-inline"
+                  onsubmit="return confirm('Excluir o pet {{ pet.nome }}?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
+            </form>
           </td>
         </tr>
         {% else %}

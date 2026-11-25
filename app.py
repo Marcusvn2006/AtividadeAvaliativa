@@ -1,28 +1,19 @@
-from flask import Flask, render_template, request, redirect, url_for
+import os
+
+from dotenv import load_dotenv
+from flask import Flask, abort, flash, render_template, request, redirect, url_for
+from flask_wtf.csrf import CSRFProtect
+from mysql.connector import Error
+
+from db import execute_insert, execute_one, execute_query
+
+load_dotenv()
 
 app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY')
 
-# Listas de dicionários simulando as tabelas (como a lista de produtos da aula 3).
-# Ficam na memória: o que for cadastrado some ao reiniciar o servidor.
-usuarios = [
-    {'id': 1, 'nome': 'Usuário 1', 'email': 'user1@example.com',
-     'celular': '1234567890', 'nivel_acesso': 'Usuário'},
-    {'id': 2, 'nome': 'Usuário 2', 'email': 'user2@example.com',
-     'celular': '9876543210', 'nivel_acesso': 'Administrador'},
-]
-
-pets = [
-    {'id': 1, 'nome': 'Thor', 'especie': 'Cão', 'raca': 'Golden Retriever',
-     'porte': 'Grande', 'peso': '32,5', 'tutor': 'Ana Souza'},
-    {'id': 2, 'nome': 'Mimi', 'especie': 'Gato', 'raca': 'Siamês',
-     'porte': 'Pequeno', 'peso': '4,2', 'tutor': 'Carlos Lima'},
-]
-
-servicos = [
-    {'id': 1, 'nome': 'Banho', 'preco': '50,00', 'duracao_minutos': '40', 'ativo': 'sim'},
-    {'id': 2, 'nome': 'Tosa higiênica', 'preco': '40,00', 'duracao_minutos': '30', 'ativo': 'sim'},
-    {'id': 3, 'nome': 'Consulta veterinária', 'preco': '150,00', 'duracao_minutos': '30', 'ativo': 'nao'},
-]
+# Liga a proteção CSRF: todo formulário POST do sistema vai precisar do token
+CSRFProtect(app)
 
 
 # LOGIN E PAINEL
@@ -56,10 +47,15 @@ def login():
 
 @app.route('/dashboard')
 def dashboard():
+    # Conta as linhas de cada tabela para os cartões do painel
+    usuarios = execute_one('SELECT COUNT(*) AS total FROM usuarios')
+    pets = execute_one('SELECT COUNT(*) AS total FROM pets')
+    servicos = execute_one('SELECT COUNT(*) AS total FROM servicos')
+
     return render_template('dashboard.html',
-                           total_usuarios=len(usuarios),
-                           total_pets=len(pets),
-                           total_servicos=len(servicos))
+                           total_usuarios=usuarios['total'],
+                           total_pets=pets['total'],
+                           total_servicos=servicos['total'])
 
 
 # BUSCA (campo "Procurar" do menu)
@@ -72,9 +68,14 @@ def busca():
     achados_servicos = []
 
     if termo:
-        achados_usuarios = [u for u in usuarios if termo.lower() in u['nome'].lower()]
-        achados_pets = [p for p in pets if termo.lower() in p['nome'].lower()]
-        achados_servicos = [s for s in servicos if termo.lower() in s['nome'].lower()]
+        # O % do LIKE vai junto do valor, nunca dentro do SQL
+        parecido = '%' + termo + '%'
+        achados_usuarios = execute_query('SELECT * FROM usuarios WHERE nome LIKE %s',
+                                         (parecido,), fetch=True)
+        achados_pets = execute_query('SELECT * FROM pets WHERE nome LIKE %s',
+                                     (parecido,), fetch=True)
+        achados_servicos = execute_query('SELECT * FROM servicos WHERE nome LIKE %s',
+                                         (parecido,), fetch=True)
 
     return render_template('busca.html', termo=termo, usuarios=achados_usuarios,
                            pets=achados_pets, servicos=achados_servicos)
@@ -84,29 +85,37 @@ def busca():
 
 @app.route('/usuarios')
 def lista_usuarios():
+    usuarios = execute_query('SELECT * FROM usuarios ORDER BY nome', fetch=True)
     return render_template('usuario_lista.html', usuarios=usuarios)
 
 
 @app.route('/usuarios/cadastro', methods=['GET', 'POST'])
-def cadastro_usuario():
+@app.route('/usuarios/<int:id_usuario>/editar', methods=['GET', 'POST'])
+def cadastro_usuario(id_usuario=None):
     usuario = {}
     erros = []
 
+    # Editando: busca o usuário no banco para preencher o formulário
+    if id_usuario:
+        usuario = execute_one('SELECT * FROM usuarios WHERE id_usuario = %s', (id_usuario,))
+        if usuario is None:
+            abort(404)
+
     if request.method == 'POST':
-        usuario = {
-            'id': len(usuarios) + 1,
+        # "or None": campo vazio vira NULL no banco
+        usuario.update({
             'nome': request.form.get('nome', '').strip(),
             'email': request.form.get('email', '').strip(),
-            'celular': request.form.get('celular', '').strip(),
-            'data_nascimento': request.form.get('data_nascimento', '').strip(),
-            'cpf': request.form.get('cpf', '').strip(),
+            'celular': request.form.get('celular', '').strip() or None,
+            'data_nascimento': request.form.get('data_nascimento', '').strip() or None,
+            'cpf': request.form.get('cpf', '').strip() or None,
             'nivel_acesso': request.form.get('nivel_acesso', ''),
-            'cep': request.form.get('cep', '').strip(),
-            'endereco': request.form.get('endereco', '').strip(),
-            'numero': request.form.get('numero', '').strip(),
-            'complemento': request.form.get('complemento', '').strip(),
-            'cidade': request.form.get('cidade', '').strip(),
-        }
+            'cep': request.form.get('cep', '').strip() or None,
+            'endereco': request.form.get('endereco', '').strip() or None,
+            'numero': request.form.get('numero', '').strip() or None,
+            'complemento': request.form.get('complemento', '').strip() or None,
+            'cidade': request.form.get('cidade', '').strip() or None,
+        })
 
         if len(usuario['nome']) < 3:
             erros.append('O nome deve ter pelo menos 3 caracteres.')
@@ -116,36 +125,75 @@ def cadastro_usuario():
             erros.append('Escolha o nível de acesso.')
 
         if not erros:
-            usuarios.append(usuario)
-            return redirect(url_for('lista_usuarios'))
+            dados = (usuario['nome'], usuario['email'], usuario['celular'],
+                     usuario['data_nascimento'], usuario['cpf'], usuario['nivel_acesso'],
+                     usuario['cep'], usuario['endereco'], usuario['numero'],
+                     usuario['complemento'], usuario['cidade'])
+            try:
+                if id_usuario:
+                    execute_query(
+                        'UPDATE usuarios SET nome = %s, email = %s, celular = %s, '
+                        'data_nascimento = %s, cpf = %s, nivel_acesso = %s, cep = %s, '
+                        'endereco = %s, numero = %s, complemento = %s, cidade = %s '
+                        'WHERE id_usuario = %s',
+                        dados + (id_usuario,))
+                    flash('Usuário atualizado.', 'success')
+                else:
+                    execute_insert(
+                        'INSERT INTO usuarios (nome, email, celular, data_nascimento, cpf, '
+                        'nivel_acesso, cep, endereco, numero, complemento, cidade) '
+                        'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                        dados)
+                    flash('Usuário cadastrado.', 'success')
+                return redirect(url_for('lista_usuarios'))
+            except Error as erro:
+                # 1062: e-mail ou CPF já cadastrado (UNIQUE no banco)
+                if erro.errno == 1062:
+                    erros.append('Já existe um usuário com esse e-mail ou CPF.')
+                else:
+                    raise
 
     return render_template('usuario_form.html', usuario=usuario, erros=erros)
+
+
+@app.route('/usuarios/<int:id_usuario>/excluir', methods=['POST'])
+def excluir_usuario(id_usuario):
+    execute_query('DELETE FROM usuarios WHERE id_usuario = %s', (id_usuario,))
+    flash('Usuário excluído.', 'success')
+    return redirect(url_for('lista_usuarios'))
 
 
 # PETS
 
 @app.route('/pets')
 def lista_pets():
+    pets = execute_query('SELECT * FROM pets ORDER BY nome', fetch=True)
     return render_template('pet_lista.html', pets=pets)
 
 
 @app.route('/pets/cadastro', methods=['GET', 'POST'])
-def cadastro_pet():
+@app.route('/pets/<int:id_pet>/editar', methods=['GET', 'POST'])
+def cadastro_pet(id_pet=None):
     pet = {}
     erros = []
 
+    if id_pet:
+        pet = execute_one('SELECT * FROM pets WHERE id_pet = %s', (id_pet,))
+        if pet is None:
+            abort(404)
+
     if request.method == 'POST':
-        pet = {
-            'id': len(pets) + 1,
+        pet.update({
             'nome': request.form.get('nome', '').strip(),
             'especie': request.form.get('especie', ''),
-            'raca': request.form.get('raca', '').strip(),
-            'porte': request.form.get('porte', ''),
-            'data_nascimento': request.form.get('data_nascimento', '').strip(),
-            'peso': request.form.get('peso', '').strip(),
+            'raca': request.form.get('raca', '').strip() or None,
+            'porte': request.form.get('porte', '') or None,
+            'data_nascimento': request.form.get('data_nascimento', '').strip() or None,
+            # Aceita 32,5 ou 32.5: o banco usa ponto
+            'peso': request.form.get('peso', '').strip().replace(',', '.') or None,
             'tutor': request.form.get('tutor', '').strip(),
-            'observacoes': request.form.get('observacoes', '').strip(),
-        }
+            'observacoes': request.form.get('observacoes', '').strip() or None,
+        })
 
         if not pet['nome']:
             erros.append('O nome do pet é obrigatório.')
@@ -153,49 +201,103 @@ def cadastro_pet():
             erros.append('Escolha a espécie.')
         if not pet['tutor']:
             erros.append('O nome do tutor é obrigatório.')
+        if pet['peso']:
+            try:
+                float(pet['peso'])
+            except ValueError:
+                erros.append('Digite um peso válido.')
 
         if not erros:
-            pets.append(pet)
+            dados = (pet['nome'], pet['especie'], pet['raca'], pet['porte'],
+                     pet['data_nascimento'], pet['peso'], pet['tutor'], pet['observacoes'])
+            if id_pet:
+                execute_query(
+                    'UPDATE pets SET nome = %s, especie = %s, raca = %s, porte = %s, '
+                    'data_nascimento = %s, peso = %s, tutor = %s, observacoes = %s '
+                    'WHERE id_pet = %s',
+                    dados + (id_pet,))
+                flash('Pet atualizado.', 'success')
+            else:
+                execute_insert(
+                    'INSERT INTO pets (nome, especie, raca, porte, data_nascimento, peso, '
+                    'tutor, observacoes) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)',
+                    dados)
+                flash('Pet cadastrado.', 'success')
             return redirect(url_for('lista_pets'))
 
     return render_template('pet_form.html', pet=pet, erros=erros)
+
+
+@app.route('/pets/<int:id_pet>/excluir', methods=['POST'])
+def excluir_pet(id_pet):
+    execute_query('DELETE FROM pets WHERE id_pet = %s', (id_pet,))
+    flash('Pet excluído.', 'success')
+    return redirect(url_for('lista_pets'))
 
 
 # SERVIÇOS
 
 @app.route('/servicos')
 def lista_servicos():
+    servicos = execute_query('SELECT * FROM servicos ORDER BY nome', fetch=True)
     return render_template('servico_lista.html', servicos=servicos)
 
 
 @app.route('/servicos/cadastro', methods=['GET', 'POST'])
-def cadastro_servico():
-    servico = {'ativo': 'sim'}
+@app.route('/servicos/<int:id_servico>/editar', methods=['GET', 'POST'])
+def cadastro_servico(id_servico=None):
+    servico = {'ativo': 1}
     erros = []
 
+    if id_servico:
+        servico = execute_one('SELECT * FROM servicos WHERE id_servico = %s', (id_servico,))
+        if servico is None:
+            abort(404)
+
     if request.method == 'POST':
-        servico = {
-            'id': len(servicos) + 1,
+        servico.update({
             'nome': request.form.get('nome', '').strip(),
-            'descricao': request.form.get('descricao', '').strip(),
-            'preco': request.form.get('preco', '').strip(),
+            'descricao': request.form.get('descricao', '').strip() or None,
+            'preco': request.form.get('preco', '').strip().replace(',', '.'),
             'duracao_minutos': request.form.get('duracao_minutos', '').strip(),
-            # Checkbox desmarcado não é enviado: .get() com valor padrão 'nao' (aula 4)
-            'ativo': request.form.get('ativo', 'nao'),
-        }
+            # Checkbox desmarcado não é enviado (aula 4)
+            'ativo': 1 if request.form.get('ativo') else 0,
+        })
 
         if not servico['nome']:
             erros.append('O nome do serviço é obrigatório.')
-        if not servico['preco']:
-            erros.append('O preço é obrigatório.')
-        if not servico['duracao_minutos']:
-            erros.append('A duração é obrigatória.')
+        try:
+            float(servico['preco'])
+        except ValueError:
+            erros.append('Digite um preço válido.')
+        if not servico['duracao_minutos'].isdigit():
+            erros.append('A duração deve ser um número de minutos.')
 
         if not erros:
-            servicos.append(servico)
+            dados = (servico['nome'], servico['descricao'], servico['preco'],
+                     servico['duracao_minutos'], servico['ativo'])
+            if id_servico:
+                execute_query(
+                    'UPDATE servicos SET nome = %s, descricao = %s, preco = %s, '
+                    'duracao_minutos = %s, ativo = %s WHERE id_servico = %s',
+                    dados + (id_servico,))
+                flash('Serviço atualizado.', 'success')
+            else:
+                execute_insert(
+                    'INSERT INTO servicos (nome, descricao, preco, duracao_minutos, ativo) '
+                    'VALUES (%s, %s, %s, %s, %s)',
+                    dados)
+                flash('Serviço cadastrado.', 'success')
             return redirect(url_for('lista_servicos'))
 
     return render_template('servico_form.html', servico=servico, erros=erros)
+
+
+@app.route('/servicos/<int:id_servico>/excluir', methods=['POST'])
+def excluir_servico(id_servico):
+    execute_query('DELETE FROM servicos WHERE id_servico = %s', (id_servico,))
+    flash('Serviço excluído.', 'success')
+    return redirect(url_for('lista_servicos'))
 
 
 if __name__ == '__main__':

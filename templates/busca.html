@@ -27,7 +27,7 @@
   <h4 class="mt-4">Serviços <span class="badge bg-secondary">{{ servicos | length }}</span></h4>
   <ul>
     {% for servico in servicos %}
-      <li>{{ servico.nome }} — R$ {{ servico.preco }}</li>
+      <li>{{ servico.nome }} — R$ {{ '%.2f' | format(servico.preco) | replace('.', ',') }}</li>
     {% else %}
       <li class="text-muted">Nenhum serviço encontrado.</li>
     {% endfor %}

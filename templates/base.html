@@ -65,6 +65,16 @@
     </div>
   {% endif %}
 
+  <!-- MENSAGENS DO FLASH: success = verde -->
+  {% for tipo, mensagem in get_flashed_messages(with_categories=true) %}
+    <div class="container mt-3">
+      <div class="alert alert-{{ tipo }} alert-dismissible fade show">
+        {{ mensagem }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    </div>
+  {% endfor %}
+
   <!-- CONTEÚDO DE CADA PÁGINA -->
   <main class="container mt-4 mb-5">
     {% block conteudo %}{% endblock %}

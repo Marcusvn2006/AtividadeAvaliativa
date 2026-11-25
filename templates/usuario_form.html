@@ -4,23 +4,24 @@
 
 {% block conteudo %}
 
-  <h2 class="mb-3">Cadastro de Usuários</h2>
+  <h2 class="mb-3">{% if usuario.id_usuario %}Editar Usuário{% else %}Cadastro de Usuários{% endif %}</h2>
 
   <div class="card">
     <div class="card-body">
-      <form action="{{ url_for('cadastro_usuario') }}" method="post">
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <!-- Nome | Email -->
         <div class="row g-3 mb-3">
           <div class="col-md-6">
             <label for="nome" class="form-label">Nome:</label>
             <input type="text" class="form-control" id="nome" name="nome"
-                   value="{{ usuario.nome | default('') }}" required minlength="3">
+                   value="{{ usuario.nome or '' }}" required minlength="3">
           </div>
           <div class="col-md-6">
             <label for="email" class="form-label">Email:</label>
             <input type="email" class="form-control" id="email" name="email"
-                   value="{{ usuario.email | default('') }}" required>
+                   value="{{ usuario.email or '' }}" required>
           </div>
         </div>
 
@@ -29,17 +30,17 @@
           <div class="col-md-3">
             <label for="celular" class="form-label">Celular:</label>
             <input type="text" class="form-control" id="celular" name="celular"
-                   value="{{ usuario.celular | default('') }}">
+                   value="{{ usuario.celular or '' }}">
           </div>
           <div class="col-md-3">
             <label for="data_nascimento" class="form-label">Data de Nascimento:</label>
-            <input type="text" class="form-control" id="data_nascimento" name="data_nascimento"
-                   placeholder="dd/mm/aaaa" value="{{ usuario.data_nascimento | default('') }}">
+            <input type="date" class="form-control" id="data_nascimento" name="data_nascimento"
+                   value="{{ usuario.data_nascimento or '' }}">
           </div>
           <div class="col-md-3">
             <label for="cpf" class="form-label">CPF:</label>
             <input type="text" class="form-control" id="cpf" name="cpf"
-                   value="{{ usuario.cpf | default('') }}">
+                   value="{{ usuario.cpf or '' }}">
           </div>
           <div class="col-md-3">
             <label for="nivel_acesso" class="form-label text-danger fw-bold">Nível de Acesso:</label>
@@ -56,17 +57,17 @@
           <div class="col-md-3">
             <label for="cep" class="form-label">CEP:</label>
             <input type="text" class="form-control" id="cep" name="cep"
-                   value="{{ usuario.cep | default('') }}">
+                   value="{{ usuario.cep or '' }}">
           </div>
           <div class="col-md-7">
             <label for="endereco" class="form-label">Endereço:</label>
             <input type="text" class="form-control" id="endereco" name="endereco"
-                   value="{{ usuario.endereco | default('') }}">
+                   value="{{ usuario.endereco or '' }}">
           </div>
           <div class="col-md-2">
             <label for="numero" class="form-label">Número:</label>
             <input type="text" class="form-control" id="numero" name="numero"
-                   value="{{ usuario.numero | default('') }}">
+                   value="{{ usuario.numero or '' }}">
           </div>
         </div>
 
@@ -75,12 +76,12 @@
           <div class="col-md-6">
             <label for="complemento" class="form-label">Complemento:</label>
             <input type="text" class="form-control" id="complemento" name="complemento"
-                   value="{{ usuario.complemento | default('') }}">
+                   value="{{ usuario.complemento or '' }}">
           </div>
           <div class="col-md-6">
             <label for="cidade" class="form-label">Cidade:</label>
             <input type="text" class="form-control" id="cidade" name="cidade"
-                   value="{{ usuario.cidade | default('') }}">
+                   value="{{ usuario.cidade or '' }}">
           </div>
         </div>
 
