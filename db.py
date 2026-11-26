@@ -24,7 +24,7 @@ CONFIGURACAO = {
     'use_pure': True,  # conector em Python puro, evita erros com XAMPP e MySQL juntos
 }
 
-pool = pooling.MySQLConnectionPool(pool_name='petfeliz_pool', pool_size=5, **CONFIGURACAO)
+pool = pooling.MySQLConnectionPool(pool_name='gestao_pool', pool_size=5, **CONFIGURACAO)
 
 def execute_query(sql, params=None, fetch=False):
     if params is None:

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'layout/base_menu.html' %}
 
 {% block titulo %}Listagem de Serviços — Pet Feliz{% endblock %}
 
@@ -6,51 +6,79 @@
 
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0">Listagem de Serviços</h2>
-    <a href="{{ url_for('cadastro_servico') }}" class="btn btn-success">ADICIONAR</a>
+    <a href="{{ url_for('inserir_servico') }}" class="btn btn-success">ADICIONAR</a>
   </div>
 
-  <div class="table-responsive">
-    <table class="table table-bordered table-hover">
-      <thead class="table-dark">
-        <tr>
-          <th>ID</th>
-          <th>NOME</th>
-          <th>PREÇO</th>
-          <th>DURAÇÃO</th>
-          <th>STATUS</th>
-          <th>AÇÕES</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for servico in servicos %}
-        <tr>
-          <td>{{ servico.id_servico }}</td>
-          <td>{{ servico.nome }}</td>
-          <td>R$ {{ '%.2f' | format(servico.preco) | replace('.', ',') }}</td>
-          <td>{{ servico.duracao_minutos }} min</td>
-          <td>
-            {% if servico.ativo %}
-              <span class="badge bg-success">Ativo</span>
-            {% else %}
-              <span class="badge bg-secondary">Inativo</span>
-            {% endif %}
-          </td>
-          <td>
-            <a href="{{ url_for('cadastro_servico', id_servico=servico.id_servico) }}" class="btn btn-warning btn-sm">Editar</a>
-            <form action="{{ url_for('excluir_servico', id_servico=servico.id_servico) }}" method="post" class="d-inline"
-                  onsubmit="return confirm('Excluir o serviço {{ servico.nome }}?')">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
-            </form>
-          </td>
-        </tr>
-        {% else %}
-        <tr>
-          <td colspan="6" class="text-center text-muted py-4">Nenhum serviço cadastrado.</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <table class="table table-bordered table-hover">
+    <thead class="table-dark">
+      <tr>
+        <th>ID</th>
+        <th>NOME</th>
+        <th>PREÇO</th>
+        <th>DURAÇÃO</th>
+        <th>STATUS</th>
+        <th>AÇÕES</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for servico in servicos %}
+      <tr>
+        <td>{{ servico.id_servico }}</td>
+        <td id="nome_servico_{{ servico.id_servico }}">{{ servico.nome }}</td>
+        <td>R$ {{ '%.2f' | format(servico.preco) | replace('.', ',') }}</td>
+        <td>{{ servico.duracao_minutos }} min</td>
+        <td>
+          {% if servico.ativo %}
+            <span class="badge bg-success">Ativo</span>
+          {% else %}
+            <span class="badge bg-secondary">Inativo</span>
+          {% endif %}
+        </td>
+        <td>
+          <a href="{{ url_for('editar_servico', id_servico=servico.id_servico) }}" class="btn btn-warning btn-sm">Editar</a>
+          <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalExcluir"
+                  onclick="prepararExclusao({{ servico.id_servico }})">Excluir</button>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="6" class="text-center text-muted py-4">Nenhum serviço cadastrado.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- MODAL DE CONFIRMAÇÃO: um só para todas as linhas -->
+  <div class="modal fade" id="modalExcluir" tabindex="-1" aria-labelledby="tituloModalExcluir" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title h5" id="tituloModalExcluir">Excluir serviço</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <form id="formExcluir" action="" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="modal-body">
+            <p class="mb-0">Excluir o serviço <strong id="nomeExcluir"></strong>? Esta ação não pode ser desfeita.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-danger">Excluir</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Escreve o nome na janela e aponta o formulário para a rota de exclusão daquele registro
+  function prepararExclusao(id) {
+    const nome = document.getElementById('nome_servico_' + id).textContent;
+    document.getElementById('nomeExcluir').textContent = nome;
+    document.getElementById('formExcluir').action = '/servicos/' + id + '/excluir';
+  }
+</script>
 {% endblock %}

@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block titulo %}Pet Feliz{% endblock %}</title>
+  <!-- As páginas usam o bloco titulo; as da aula (404 e 500) usam titulo_aba. Os dois funcionam. -->
+  <title>{% block titulo_aba %}{% block titulo %}Pet Feliz{% endblock %}{% endblock %}</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
         rel="stylesheet">
@@ -11,28 +12,26 @@
 </head>
 <body class="fundo-cinza">
 
-  <!-- Template SEM menu: usado pela tela de login -->
+  <!-- Layout SEM menu: usado pelo login e pelas páginas de erro 404 e 500 -->
   <main class="container mt-5">
 
-    <!-- ERROS: a lista 'erros' vem do Python; o for cria um item para cada erro -->
-    {% if erros %}
+    <!-- MENSAGENS DO FLASH (ex.: "E-mail ou senha incorretos.") -->
+    {% for tipo, mensagem in get_flashed_messages(with_categories=true) %}
       <div class="row justify-content-center">
         <div class="col-md-5">
-          <div class="alert alert-danger">
-            <ul class="mb-0">
-              {% for erro in erros %}
-                <li>{{ erro }}</li>
-              {% endfor %}
-            </ul>
+          <div class="alert alert-{{ tipo }} alert-dismissible fade show">
+            {{ mensagem }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
           </div>
         </div>
       </div>
-    {% endif %}
+    {% endfor %}
 
     {% block conteudo %}{% endblock %}
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
   </script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>

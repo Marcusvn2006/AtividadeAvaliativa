@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- As páginas usam o bloco titulo; as da aula (404 e 500) usam titulo_aba. Os dois funcionam. -->
+  <title>{% block titulo_aba %}{% block titulo %}Pet Feliz{% endblock %}{% endblock %}</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+  <!-- Ícones (bi bi-...) usados na listagem de perfis -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+        rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <!-- MENU SUPERIOR -->
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+      <a class="navbar-brand" href="{{ url_for('dashboard') }}">Pet Feliz</a>
+
+      <button class="navbar-toggler" type="button"
+              data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Perfis</a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{{ url_for('listar_perfis') }}">Listar Perfis</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('inserir_perfil') }}">Cadastrar Perfil</a></li>
+            </ul>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Pets</a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{{ url_for('listar_pets') }}">Listar Pets</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('inserir_pet') }}">Cadastrar Pet</a></li>
+            </ul>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Serviços</a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{{ url_for('listar_servicos') }}">Listar Serviços</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('inserir_servico') }}">Cadastrar Serviço</a></li>
+            </ul>
+          </li>
+        </ul>
+
+        <!-- Campo Procurar: envia ?q=termo para a rota /busca -->
+        <form class="d-flex gap-2 ms-auto" action="{{ url_for('busca') }}" method="get">
+          <input class="form-control" type="search" name="q" placeholder="Procurar">
+        </form>
+
+        <!-- Quem entrou (guardado na session pelo login) e o botão Sair -->
+        {% if session.get('id_usuario') %}
+          <span class="navbar-text text-white ms-3 me-2 text-nowrap">{{ session['nome'] }} · {{ session['perfil'] }}</span>
+          <!-- Sair é POST: apaga a session e precisa do token CSRF -->
+          <form action="{{ url_for('logout') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-secondary">SAIR</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <!-- MENSAGENS DO FLASH: success = verde, danger = vermelho, warning = amarelo -->
+  {% for tipo, mensagem in get_flashed_messages(with_categories=true) %}
+    <div class="container mt-3">
+      <div class="alert alert-{{ tipo }} alert-dismissible fade show">
+        {{ mensagem }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    </div>
+  {% endfor %}
+
+  <!-- CONTEÚDO DE CADA PÁGINA -->
+  <main class="container mt-4 mb-5">
+    {% block conteudo %}{% endblock %}
+  </main>
+
+  <!-- RODAPÉ -->
+  <footer class="text-center py-3 mt-auto">
+    <div class="container">
+      Projeto desenvolvido por: Marcus Vinicius Avanso Romão
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
+  </script>
+
+  <!-- JavaScript de cada página (ex.: o modal de exclusão das listagens) -->
+  {% block scripts %}{% endblock %}
+</body>
+</html>

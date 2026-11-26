@@ -1,4 +1,4 @@
-{% extends 'base_sem_menu.html' %}
+{% extends 'layout/base_limpa.html' %}
 
 {% block titulo %}Login — Pet Feliz{% endblock %}
 
@@ -6,11 +6,12 @@
   <div class="row justify-content-center">
     <div class="col-md-5">
 
+      <!-- Usuário que o banco.sql já cadastra, para o primeiro acesso -->
       <div class="card border-info mb-3">
         <div class="card-header bg-info text-white">Dados para acesso</div>
         <div class="card-body">
           <p class="mb-1"><strong>E-mail:</strong> admin@petfeliz.com</p>
-          <p class="mb-0"><strong>Senha:</strong> 123456</p>
+          <p class="mb-0"><strong>Senha:</strong> Senha123</p>
         </div>
       </div>
 
@@ -27,23 +28,22 @@
             <div class="mb-3">
               <label for="email" class="form-label">E-mail:</label>
               <input type="email" class="form-control" id="email" name="email"
-                     placeholder="Digite seu e-mail" value="{{ email | default('') }}">
+                     placeholder="Digite seu e-mail" value="{{ email | default('') }}"
+                     required autofocus autocomplete="username">
             </div>
 
             <div class="mb-3">
               <label for="senha" class="form-label">Senha:</label>
               <input type="password" class="form-control" id="senha" name="senha"
-                     placeholder="Digite sua senha">
+                     placeholder="Digite sua senha" required autocomplete="current-password">
             </div>
 
             <button type="submit" class="btn btn-success w-100">Entrar</button>
           </form>
 
-          <div class="text-center mt-3 mb-3">
+          <div class="text-center mt-3">
             <a href="#">Recuperar Senha</a>
           </div>
-
-          <a href="{{ url_for('cadastro_usuario') }}" class="btn btn-primary w-100">CADASTRAR</a>
         </div>
       </div>
 

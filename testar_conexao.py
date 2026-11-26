@@ -9,10 +9,12 @@ print('Banco:', info['banco'])
 print('Servidor:', info['versao'])
 print('Hora do banco:', info['agora'])
 
+perfis = execute_one('SELECT COUNT(*) AS total FROM perfis')
 usuarios = execute_one('SELECT COUNT(*) AS total FROM usuarios')
 pets = execute_one('SELECT COUNT(*) AS total FROM pets')
 servicos = execute_one('SELECT COUNT(*) AS total FROM servicos')
 
+print('Tabela perfis:', perfis['total'], 'linhas')
 print('Tabela usuarios:', usuarios['total'], 'linhas')
 print('Tabela pets:', pets['total'], 'linhas')
 print('Tabela servicos:', servicos['total'], 'linhas')

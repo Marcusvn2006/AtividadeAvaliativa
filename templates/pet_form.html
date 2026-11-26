@@ -1,14 +1,20 @@
-{% extends 'base.html' %}
+{% extends 'layout/base_menu.html' %}
 
 {% block titulo %}Cadastro de Pets — Pet Feliz{% endblock %}
 
 {% block conteudo %}
 
-  <h2 class="mb-3">{% if pet.id_pet %}Editar Pet{% else %}Cadastro de Pets{% endif %}</h2>
+  {% if acao == 'editar' %}
+    {% set destino = url_for('editar_pet', id_pet=id_pet) %}
+  {% else %}
+    {% set destino = url_for('inserir_pet') %}
+  {% endif %}
+
+  <h2 class="mb-3">{{ 'Editar Pet' if acao == 'editar' else 'Cadastro de Pets' }}</h2>
 
   <div class="card">
     <div class="card-body">
-      <form method="post">
+      <form action="{{ destino }}" method="post">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <!-- Nome | Espécie | Raça -->
@@ -72,7 +78,7 @@
         </div>
 
         <div class="d-flex justify-content-between">
-          <a href="{{ url_for('lista_pets') }}" class="btn btn-outline-dark">Voltar</a>
+          <a href="{{ url_for('listar_pets') }}" class="btn btn-outline-dark">Voltar</a>
           <button type="reset" class="btn btn-secondary">Limpar</button>
           <button type="submit" class="btn btn-success">Salvar</button>
         </div>
